@@ -1,7 +1,8 @@
 use crate::error::Result;
 use crate::models::*;
 use bollard::container::{ListContainersOptions, StatsOptions};
-use bollard::models::ContainerStats;
+use bollard::models::ContainerSummary;
+use bollard::models::Stats;
 use bollard::Docker;
 use chrono::{DateTime, Utc};
 use futures_util::StreamExt;
@@ -137,6 +138,10 @@ impl DockerCollector {
                 }
             }
 
+            // ContainerSummary may not have started_at or restart_count in bollard 0.18
+            let started_at = None;
+            let restart_count = None;
+
             container_metrics.push(ContainerMetrics {
                 id,
                 name: name.trim_start_matches('/').to_string(),
@@ -148,9 +153,9 @@ impl DockerCollector {
                 memory_limit_bytes,
                 network_rx_bytes,
                 network_tx_bytes,
-                restart_count: None, // Not available in ContainerSummary
+                restart_count,
                 created: created_dt,
-                started_at: None, // Not available in ContainerSummary
+                started_at,
             });
         }
 
@@ -161,7 +166,7 @@ impl DockerCollector {
     }
 
     fn calculate_cpu_percent(
-        stats: &ContainerStats,
+        stats: &Stats,
         prev_stats: &mut HashMap<String, ContainerStatsSnapshot>,
         container_id: &str,
         elapsed: Duration,
@@ -185,7 +190,7 @@ impl DockerCollector {
         None
     }
 
-    fn create_snapshot(stats: &ContainerStats) -> ContainerStatsSnapshot {
+    fn create_snapshot(stats: &Stats) -> ContainerStatsSnapshot {
         let cpu_total = stats.cpu_stats.cpu_usage.total_usage;
         let cpu_system = stats.cpu_stats.system_cpu_usage.unwrap_or(0);
         ContainerStatsSnapshot {

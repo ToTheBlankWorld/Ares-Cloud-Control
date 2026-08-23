@@ -1,4 +1,3 @@
-use crate::models::FullMetricsSnapshot;
 use crate::state::SharedMetricsState;
 use axum::{
     extract::{
@@ -7,7 +6,7 @@ use axum::{
     },
     response::Response,
 };
-use bytes::Bytes;
+
 use futures_util::{SinkExt, StreamExt};
 use std::time::Duration;
 use tokio::sync::mpsc;
