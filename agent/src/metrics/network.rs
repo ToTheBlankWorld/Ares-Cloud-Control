@@ -2,7 +2,7 @@ use crate::error::Result;
 use crate::models::*;
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
-use sysinfo::{NetworkExt, NetworksExt, System, SystemExt};
+use sysinfo::{Network, NetworkExt, NetworksExt, System, SystemExt};
 
 pub struct NetworkCollector {
     system: System,
@@ -20,7 +20,7 @@ struct NetworkSnapshot {
 
 impl NetworkCollector {
     pub fn new() -> Self {
-        let mut system = System::new();
+        let mut system = System::new_all();
         system.refresh_networks();
         let prev_stats = Self::read_network_stats(&system);
         Self {

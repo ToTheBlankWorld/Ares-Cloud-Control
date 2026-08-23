@@ -8,7 +8,7 @@ pub struct MemoryCollector {
 
 impl MemoryCollector {
     pub fn new() -> Self {
-        let mut system = System::new();
+        let mut system = System::new_all();
         system.refresh_memory();
         Self { system }
     }

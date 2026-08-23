@@ -11,7 +11,7 @@ pub struct SystemCollector {
 
 impl SystemCollector {
     pub fn new() -> Self {
-        let mut system = System::new();
+        let mut system = System::new_all();
         system.refresh_all();
         let boot_time = System::boot_time();
         Self {

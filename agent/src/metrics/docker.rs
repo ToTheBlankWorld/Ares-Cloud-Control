@@ -1,7 +1,7 @@
 use crate::error::Result;
 use crate::models::*;
 use bollard::container::{ListContainersOptions, StatsOptions};
-use bollard::models::{ContainerStats, ContainerSummary};
+use bollard::models::{ContainerStats, ContainerSummaryInner};
 use bollard::Docker;
 use chrono::{DateTime, Utc};
 use futures_util::StreamExt;
@@ -103,10 +103,8 @@ impl DockerCollector {
             let created_dt =
                 DateTime::from_timestamp(created as i64, 0).unwrap_or_else(|| Utc::now());
             let started_at = container
-                .state
-                .as_ref()
-                .and_then(|s| s.started_at.as_ref())
-                .and_then(|t| DateTime::parse_from_rfc3339(t).ok())
+                .started_at
+                .and_then(|t| DateTime::parse_from_rfc3339(&t).ok())
                 .map(|t| t.with_timezone(&Utc));
 
             let mut cpu_percent = None;

@@ -1,21 +1,25 @@
 use crate::error::Result;
 use crate::models::*;
 use std::time::Duration;
-use sysinfo::{CpuExt, CpuRefreshKind, System, SystemExt};
+use sysinfo::{Cpu, CpuRefreshKind, System, SystemExt};
 
 pub struct CpuCollector {
     system: System,
+    first_run: bool,
 }
 
 impl CpuCollector {
     pub fn new() -> Self {
-        let mut system = System::new();
-        system.refresh_cpu_all();
-        Self { system }
+        let mut system = System::new_all();
+        system.refresh_cpu(CpuRefreshKind::everything());
+        Self {
+            system,
+            first_run: true,
+        }
     }
 
     pub fn collect(&mut self) -> Result<CpuMetrics> {
-        self.system.refresh_cpu_all();
+        self.system.refresh_cpu(CpuRefreshKind::everything());
 
         let core_count = self.system.cpus().len();
         let thread_count = core_count;
@@ -41,6 +45,8 @@ impl CpuCollector {
             five: self.system.load_average().five as f64,
             fifteen: self.system.load_average().fifteen as f64,
         };
+
+        self.first_run = false;
 
         Ok(CpuMetrics {
             total_usage_percent: if core_count > 0 {

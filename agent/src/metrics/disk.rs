@@ -2,7 +2,7 @@ use crate::error::Result;
 use crate::models::*;
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
-use sysinfo::{DiskExt, DiskKind, DiskType, System, SystemExt};
+use sysinfo::{Disk, DiskExt, System, SystemExt};
 
 pub struct DiskCollector {
     system: System,
@@ -21,7 +21,7 @@ struct DiskIoSnapshot {
 
 impl DiskCollector {
     pub fn new() -> Self {
-        let mut system = System::new();
+        let mut system = System::new_all();
         system.refresh_disks_list();
         system.refresh_disks();
         Self {

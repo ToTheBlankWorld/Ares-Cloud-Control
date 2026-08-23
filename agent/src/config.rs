@@ -1,5 +1,5 @@
 use crate::error::{AgentError, Result};
-use config::{Config, ConfigError, File};
+use config::{Config, ConfigError, File, FileFormat};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
@@ -40,22 +40,18 @@ pub struct AuthConfig {
     pub token_file: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct GpuConfig {
-    #[serde(default = "default_true")]
+    #[serde(default)]
     pub enabled: bool,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct DockerConfig {
-    #[serde(default = "default_true")]
+    #[serde(default)]
     pub enabled: bool,
     #[serde(default = "default_docker_socket")]
     pub socket: String,
-}
-
-fn default_true() -> bool {
-    false
 }
 
 fn default_docker_socket() -> String {
@@ -79,14 +75,14 @@ impl AppConfig {
             .set_default("server.host", default_host())?
             .set_default("server.port", default_port())?
             .set_default("monitoring.interval_ms", default_interval_ms())?
-            .set_default("monitoring.process_limit", default_process_limit())?
+            .set_default("monitoring.process_limit", default_process_limit() as i64)?
             .set_default("gpu.enabled", false)?
             .set_default("docker.enabled", false)?
             .set_default("docker.socket", default_docker_socket())?;
 
         if let Some(path) = config_path {
             if path.exists() {
-                builder = builder.add_source(File::from(path).required(true));
+                builder = builder.add_source(File::from(path.as_path()).required(true));
             } else {
                 return Err(AgentError::InvalidConfig(format!(
                     "Config file not found: {}",
@@ -101,14 +97,17 @@ impl AppConfig {
             ];
             for path in default_paths {
                 if std::path::Path::new(path).exists() {
-                    builder = builder.add_source(File::from(path).required(false));
+                    builder =
+                        builder.add_source(File::from(std::path::Path::new(path)).required(false));
                     break;
                 }
             }
         }
 
         let config = builder.build()?;
-        config.try_deserialize().map_err(AgentError::Config)
+        config
+            .try_deserialize()
+            .map_err(|e| AgentError::Config(ConfigError::Message(e.to_string())))
     }
 }
 

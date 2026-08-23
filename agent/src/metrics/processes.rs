@@ -1,7 +1,7 @@
 use crate::error::Result;
 use crate::models::*;
 use std::collections::HashMap;
-use sysinfo::{Pid, ProcessExt, ProcessRefreshKind, ProcessStatus, System, SystemExt};
+use sysinfo::{Pid, Process, ProcessRefreshKind, ProcessStatus, System, SystemExt};
 
 pub struct ProcessCollector {
     system: System,
@@ -12,7 +12,7 @@ pub struct ProcessCollector {
 
 impl ProcessCollector {
     pub fn new(limit: usize) -> Self {
-        let mut system = System::new();
+        let mut system = System::new_all();
         system.refresh_processes(ProcessRefreshKind::everything());
         let prev_cpu_times = Self::read_cpu_usage(&system);
         Self {

@@ -5,6 +5,7 @@ use crate::websocket::websocket_handler;
 use axum::{
     extract::{Query, State},
     http::{HeaderMap, HeaderValue, StatusCode},
+    middleware::{self, Next},
     response::{IntoResponse, Json, Response},
     routing::get,
     Router,
@@ -26,7 +27,7 @@ pub fn create_router(state: SharedMetricsState, token: String) -> Router {
         .route("/api/docker", get(docker_handler))
         .route("/api/metrics", get(full_metrics_handler))
         .route("/ws", get(websocket_handler))
-        .layer(axum::middleware::from_fn_with_state(
+        .layer(middleware::from_fn_with_state(
             token.clone(),
             auth_middleware,
         ));
@@ -128,7 +129,7 @@ async fn auth_middleware(
     State(token): State<String>,
     headers: HeaderMap,
     req: axum::http::Request<axum::body::Body>,
-    next: axum::middleware::Next,
+    next: Next,
 ) -> Result<Response, StatusCode> {
     let auth_header = headers.get("authorization").and_then(|h| h.to_str().ok());
 
