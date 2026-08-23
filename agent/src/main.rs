@@ -60,7 +60,7 @@ async fn main() -> Result<()> {
         .await;
     });
 
-    let app = create_router(state, token);
+    let app = create_router(state, token, config.cors);
 
     let addr: SocketAddr = format!("{}:{}", config.server.host, config.server.port).parse()?;
     info!("Listening on {}", addr);

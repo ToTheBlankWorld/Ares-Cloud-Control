@@ -18,3 +18,23 @@ enabled = false
 # If enabling, use ACL or socket proxy instead of adding user to 'docker' group
 enabled = false
 socket = "/var/run/docker.sock"
+
+[cors]
+# Allowed origins for CORS. Empty = allow all (development only).
+# For production, specify the dashboard origin(s) explicitly:
+# allowed_origins = ["https://your-dashboard.vercel.app"]
+# For local development:
+# allowed_origins = ["http://localhost:5173"]
+allowed_origins = []
+
+# HTTP methods allowed for cross-origin requests
+allowed_methods = ["GET", "POST", "OPTIONS"]
+
+# Headers allowed for cross-origin requests
+allowed_headers = ["Authorization", "Content-Type"]
+
+# Allow credentials (cookies, auth headers) in cross-origin requests
+allow_credentials = false
+
+# Max age for preflight cache in seconds (default: 24 hours)
+max_age = 86400

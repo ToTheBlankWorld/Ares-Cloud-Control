@@ -1,18 +1,22 @@
+use crate::config::CorsConfig;
 use crate::models::*;
 use crate::state::SharedMetricsState;
 use crate::websocket::websocket_handler;
 use axum::{
     extract::{Query, State},
-    http::{HeaderMap, StatusCode},
+    http::{HeaderMap, HeaderName, HeaderValue, Method, StatusCode},
     middleware::{self, Next},
     response::{IntoResponse, Json, Response},
     routing::get,
     Router,
 };
 use subtle::ConstantTimeEq;
+use tower_http::cors::{Any, CorsLayer};
 use tracing::{debug, warn};
 
-pub fn create_router(state: SharedMetricsState, token: String) -> Router {
+pub fn create_router(state: SharedMetricsState, token: String, cors_config: CorsConfig) -> Router {
+    let cors = build_cors_layer(cors_config);
+
     let protected_router = Router::new()
         .route("/api/status", get(status_handler))
         .route("/api/system", get(system_handler))
@@ -34,6 +38,7 @@ pub fn create_router(state: SharedMetricsState, token: String) -> Router {
         .route("/api/health", get(health_handler))
         .merge(protected_router)
         .with_state(state)
+        .layer(cors)
 }
 
 async fn health_handler(State(state): State<SharedMetricsState>) -> impl IntoResponse {
@@ -157,6 +162,46 @@ fn constant_time_eq(a: &[u8], b: &[u8]) -> bool {
         return false;
     }
     a.ct_eq(b).into()
+}
+
+fn build_cors_layer(config: CorsConfig) -> CorsLayer {
+    let mut cors = CorsLayer::new()
+        .allow_methods(
+            config
+                .allowed_methods
+                .iter()
+                .filter_map(|m| m.parse::<Method>().ok())
+                .collect::<Vec<_>>(),
+        )
+        .allow_headers(
+            config
+                .allowed_headers
+                .iter()
+                .filter_map(|h| h.parse::<HeaderName>().ok())
+                .collect::<Vec<_>>(),
+        )
+        .max_age(std::time::Duration::from_secs(config.max_age));
+
+    if config.allow_credentials {
+        cors = cors.allow_credentials(true);
+    }
+
+    if config.allowed_origins.is_empty() {
+        cors = cors.allow_origin(Any);
+    } else {
+        let origins: Vec<HeaderValue> = config
+            .allowed_origins
+            .iter()
+            .filter_map(|o| o.parse::<HeaderValue>().ok())
+            .collect();
+        if !origins.is_empty() {
+            cors = cors.allow_origin(origins);
+        } else {
+            cors = cors.allow_origin(Any);
+        }
+    }
+
+    cors
 }
 
 #[cfg(test)]

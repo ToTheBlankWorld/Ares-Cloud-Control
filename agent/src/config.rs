@@ -3,6 +3,32 @@ use config::{Config, ConfigError, File};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct CorsConfig {
+    #[serde(default)]
+    pub allowed_origins: Vec<String>,
+    #[serde(default = "default_allowed_methods")]
+    pub allowed_methods: Vec<String>,
+    #[serde(default = "default_allowed_headers")]
+    pub allowed_headers: Vec<String>,
+    #[serde(default)]
+    pub allow_credentials: bool,
+    #[serde(default = "default_max_age")]
+    pub max_age: u64,
+}
+
+fn default_allowed_methods() -> Vec<String> {
+    vec!["GET".to_string(), "POST".to_string(), "OPTIONS".to_string()]
+}
+
+fn default_allowed_headers() -> Vec<String> {
+    vec!["Authorization".to_string(), "Content-Type".to_string()]
+}
+
+fn default_max_age() -> u64 {
+    86400
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServerConfig {
     #[serde(default = "default_host")]
@@ -72,6 +98,8 @@ pub struct AppConfig {
     pub gpu: GpuConfig,
     #[serde(default)]
     pub docker: DockerConfig,
+    #[serde(default)]
+    pub cors: CorsConfig,
 }
 
 impl AppConfig {
@@ -84,7 +112,12 @@ impl AppConfig {
             .set_default("gpu.enabled", false)?
             .set_default("docker.enabled", false)?
             .set_default("docker.socket", default_docker_socket())?
-            .set_default("auth.token_file", default_token_file())?;
+            .set_default("auth.token_file", default_token_file())?
+            .set_default("cors.allowed_origins", Vec::<String>::new())?
+            .set_default("cors.allowed_methods", default_allowed_methods())?
+            .set_default("cors.allowed_headers", default_allowed_headers())?
+            .set_default("cors.allow_credentials", false)?
+            .set_default("cors.max_age", default_max_age())?;
 
         if let Some(path) = config_path {
             if path.exists() {
@@ -146,6 +179,9 @@ mod tests {
             [docker]
             enabled = true
             socket = "/var/run/docker.sock"
+
+            [cors]
+            allowed_origins = ["http://localhost:5173"]
             "#
         )
         .unwrap();
@@ -159,6 +195,7 @@ mod tests {
         assert!(config.gpu.enabled);
         assert!(config.docker.enabled);
         assert_eq!(config.docker.socket, "/var/run/docker.sock");
+        assert_eq!(config.cors.allowed_origins, vec!["http://localhost:5173"]);
     }
 
     #[test]
@@ -171,5 +208,10 @@ mod tests {
         assert!(!config.gpu.enabled);
         assert!(!config.docker.enabled);
         assert_eq!(config.docker.socket, "/var/run/docker.sock");
+        assert!(config.cors.allowed_origins.is_empty());
+        assert_eq!(config.cors.allowed_methods, vec!["GET", "POST", "OPTIONS"]);
+        assert_eq!(config.cors.allowed_headers, vec!["Authorization", "Content-Type"]);
+        assert!(!config.cors.allow_credentials);
+        assert_eq!(config.cors.max_age, 86400);
     }
 }
