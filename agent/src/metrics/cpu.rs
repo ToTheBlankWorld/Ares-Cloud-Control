@@ -1,6 +1,6 @@
 use crate::error::Result;
 use crate::models::*;
-use sysinfo::{System, SystemExt};
+use sysinfo::System;
 
 pub struct CpuCollector {
     system: System,

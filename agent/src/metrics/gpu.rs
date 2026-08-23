@@ -1,6 +1,5 @@
 use crate::error::Result;
 use crate::models::*;
-use std::sync::OnceLock;
 
 #[cfg(target_os = "linux")]
 use nvml_wrapper::{enum_wrappers::device::TemperatureSensor, NVML};

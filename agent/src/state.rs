@@ -1,6 +1,6 @@
 use crate::error::Result;
 use crate::models::*;
-use chrono::{DateTime, Utc};
+use chrono::Utc;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::RwLock;

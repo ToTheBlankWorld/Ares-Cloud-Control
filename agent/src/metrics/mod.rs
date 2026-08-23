@@ -9,11 +9,9 @@ pub mod system;
 pub mod temperature;
 
 use crate::error::Result;
-use crate::models::*;
+use crate::models::CollectorStatus;
 use crate::state::SharedMetricsState;
-use std::sync::Arc;
 use std::time::Duration;
-use tokio::sync::RwLock;
 use tokio::time::interval;
 use tracing::{error, info, warn};
 

@@ -2,7 +2,7 @@ use crate::error::Result;
 use crate::models::*;
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
-use sysinfo::{NetworkData, Networks, System};
+use sysinfo::Networks;
 
 pub struct NetworkCollector {
     networks: Networks,

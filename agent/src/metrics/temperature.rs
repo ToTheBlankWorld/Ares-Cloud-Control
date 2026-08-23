@@ -1,7 +1,7 @@
 use crate::error::Result;
 use crate::models::*;
 use std::collections::HashMap;
-use sysinfo::{Components, System};
+use sysinfo::Components;
 
 pub struct TemperatureCollector {
     components: Components,

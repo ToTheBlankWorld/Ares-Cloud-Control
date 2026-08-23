@@ -1,7 +1,7 @@
 use crate::error::Result;
 use crate::models::*;
 use std::collections::HashMap;
-use sysinfo::{Pid, Process, ProcessStatus, System};
+use sysinfo::{Pid, ProcessStatus, System};
 
 pub struct ProcessCollector {
     system: System,

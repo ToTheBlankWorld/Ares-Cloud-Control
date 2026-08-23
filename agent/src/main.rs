@@ -14,7 +14,7 @@ use crate::state::{create_initial_snapshot, MetricsState};
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::signal;
-use tracing::{error, info, warn};
+use tracing::info;
 
 #[tokio::main]
 async fn main() -> Result<()> {

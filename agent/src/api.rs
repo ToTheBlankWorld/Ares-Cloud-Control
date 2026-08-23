@@ -1,4 +1,3 @@
-use crate::error::Result;
 use crate::models::*;
 use crate::state::SharedMetricsState;
 use crate::websocket::websocket_handler;
@@ -10,7 +9,6 @@ use axum::{
     routing::get,
     Router,
 };
-use std::sync::Arc;
 use subtle::ConstantTimeEq;
 use tracing::{debug, warn};
 

@@ -1,4 +1,3 @@
-use crate::error::Result;
 use crate::models::FullMetricsSnapshot;
 use crate::state::SharedMetricsState;
 use axum::{
@@ -8,6 +7,7 @@ use axum::{
     },
     response::Response,
 };
+use bytes::Bytes;
 use futures_util::{SinkExt, StreamExt};
 use std::time::Duration;
 use tokio::sync::mpsc;
@@ -41,7 +41,7 @@ async fn handle_socket(socket: WebSocket, state: SharedMetricsState) {
                     }
                 }
                 WsMessage::Pong(data) => {
-                    if sender.send(Message::Pong(data)).await.is_err() {
+                    if sender.send(Message::Pong(data.into())).await.is_err() {
                         break;
                     }
                 }
@@ -77,7 +77,8 @@ async fn handle_socket(socket: WebSocket, state: SharedMetricsState) {
                         break;
                     }
                     Some(Ok(Message::Ping(data))) => {
-                        if tx.try_send(WsMessage::Pong(data)).is_err() {
+                        // Convert Axum Bytes to Vec<u8> for internal channel
+                        if tx.try_send(WsMessage::Pong(data.to_vec())).is_err() {
                             break;
                         }
                     }

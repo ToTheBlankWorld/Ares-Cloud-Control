@@ -1,7 +1,7 @@
 use crate::error::Result;
 use crate::models::*;
 use bollard::container::{ListContainersOptions, StatsOptions};
-use bollard::models::ContainerSummary;
+use bollard::models::container::ContainerStats;
 use bollard::Docker;
 use chrono::{DateTime, Utc};
 use futures_util::StreamExt;
@@ -99,7 +99,7 @@ impl DockerCollector {
             let image = container.image.clone().unwrap_or_default();
             let status = container.status.clone().unwrap_or_default();
             let state = container.state.clone().unwrap_or_default();
-            let created = container.created;
+            let created = container.created.unwrap_or(0);
             let created_dt =
                 DateTime::from_timestamp(created as i64, 0).unwrap_or_else(|| Utc::now());
 
@@ -161,7 +161,7 @@ impl DockerCollector {
     }
 
     fn calculate_cpu_percent(
-        stats: &bollard::models::ContainerStats,
+        stats: &ContainerStats,
         prev_stats: &mut HashMap<String, ContainerStatsSnapshot>,
         container_id: &str,
         elapsed: Duration,
@@ -185,7 +185,7 @@ impl DockerCollector {
         None
     }
 
-    fn create_snapshot(stats: &bollard::models::ContainerStats) -> ContainerStatsSnapshot {
+    fn create_snapshot(stats: &ContainerStats) -> ContainerStatsSnapshot {
         let cpu_total = stats.cpu_stats.cpu_usage.total_usage;
         let cpu_system = stats.cpu_stats.system_cpu_usage.unwrap_or(0);
         ContainerStatsSnapshot {

@@ -1,8 +1,9 @@
 use crate::error::Result;
 use crate::models::*;
 use std::collections::HashMap;
+use std::fs;
 use std::time::{Duration, Instant};
-use sysinfo::{Disk, Disks, System};
+use sysinfo::Disks;
 
 pub struct DiskCollector {
     disks: Disks,
@@ -20,7 +21,7 @@ struct DiskIoSnapshot {
 impl DiskCollector {
     pub fn new() -> Self {
         let mut disks = Disks::new();
-        disks.refresh(true);
+        disks.refresh();
         Self {
             disks,
             prev_io: HashMap::new(),
@@ -29,7 +30,7 @@ impl DiskCollector {
     }
 
     pub fn collect(&mut self) -> Result<DiskMetrics> {
-        self.disks.refresh(true);
+        self.disks.refresh();
 
         let now = Instant::now();
         let elapsed = self.last_update.map_or(Duration::from_secs(1), |last| {
@@ -37,6 +38,21 @@ impl DiskCollector {
         });
         self.last_update = Some(now);
 
+        // Read I/O stats from /proc/diskstats
+        let mut disk_io_stats = HashMap::new();
+        if let Ok(content) = fs::read_to_string("/proc/diskstats") {
+            for line in content.lines() {
+                let parts: Vec<&str> = line.split_whitespace().collect();
+                if parts.len() >= 14 {
+                    let device = parts[2];
+                    let read_bytes = parts[5].parse::<u64>().unwrap_or(0) * 512; // sectors * 512
+                    let write_bytes = parts[9].parse::<u64>().unwrap_or(0) * 512; // sectors * 512
+                    disk_io_stats.insert(device.to_string(), (read_bytes, write_bytes));
+                }
+            }
+        }
+
+        let now = Instant::now();
         let mut filesystems = Vec::new();
         let mut total_read_bytes = 0u64;
         let mut total_write_bytes = 0u64;
@@ -67,9 +83,11 @@ impl DiskCollector {
             });
 
             let name = disk.name().to_string_lossy().to_string();
+            let (read_bytes, write_bytes) = disk_io_stats.get(&name).copied().unwrap_or((0, 0));
+
             let current = DiskIoSnapshot {
-                read_bytes: disk.read_bytes(),
-                write_bytes: disk.write_bytes(),
+                read_bytes,
+                write_bytes,
                 timestamp: now,
             };
 
