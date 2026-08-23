@@ -4,7 +4,7 @@ use crate::state::SharedMetricsState;
 use crate::websocket::websocket_handler;
 use axum::{
     extract::{Query, State},
-    http::{HeaderMap, HeaderValue, StatusCode},
+    http::{HeaderMap, StatusCode},
     middleware::{self, Next},
     response::{IntoResponse, Json, Response},
     routing::get,

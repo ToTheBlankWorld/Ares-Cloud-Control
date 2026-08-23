@@ -30,9 +30,14 @@ async fn handle_socket(socket: WebSocket, state: SharedMetricsState) {
     let (tx, mut rx) = mpsc::channel::<String>(10);
 
     // Spawn a task to handle sending with backpressure
+    let mut sender_task_sender = sender.clone();
     let send_task = tokio::spawn(async move {
         while let Some(json) = rx.recv().await {
-            if sender.send(Message::Text(json.into())).await.is_err() {
+            if sender_task_sender
+                .send(Message::Text(json.into()))
+                .await
+                .is_err()
+            {
                 debug!("WebSocket client disconnected during send");
                 break;
             }

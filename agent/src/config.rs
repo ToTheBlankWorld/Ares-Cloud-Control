@@ -1,5 +1,5 @@
 use crate::error::{AgentError, Result};
-use config::{Config, ConfigError, File, FileFormat};
+use config::{Config, ConfigError, File};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 

@@ -1,7 +1,7 @@
 use crate::error::Result;
 use crate::models::*;
 use std::time::Duration;
-use sysinfo::{Cpu, CpuRefreshKind, System, SystemExt};
+use sysinfo::{CpuRefreshKind, System, SystemExt};
 
 pub struct CpuCollector {
     system: System,

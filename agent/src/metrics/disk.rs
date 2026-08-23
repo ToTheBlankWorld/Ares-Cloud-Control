@@ -14,8 +14,6 @@ pub struct DiskCollector {
 struct DiskIoSnapshot {
     read_bytes: u64,
     write_bytes: u64,
-    read_ops: u64,
-    write_ops: u64,
     timestamp: Instant,
 }
 
@@ -44,8 +42,6 @@ impl DiskCollector {
         let mut filesystems = Vec::new();
         let mut total_read_bytes = 0u64;
         let mut total_write_bytes = 0u64;
-        let mut total_read_ops = 0u64;
-        let mut total_write_ops = 0u64;
 
         for disk in self.system.disks() {
             let total = disk.total_space();
@@ -76,8 +72,6 @@ impl DiskCollector {
             let current = DiskIoSnapshot {
                 read_bytes: disk.read_bytes(),
                 write_bytes: disk.write_bytes(),
-                read_ops: 0,
-                write_ops: 0,
                 timestamp: now,
             };
 
@@ -99,8 +93,8 @@ impl DiskCollector {
             Some(DiskIoMetrics {
                 read_bytes_per_sec: total_read_bytes,
                 write_bytes_per_sec: total_write_bytes,
-                read_ops_per_sec: total_read_ops,
-                write_ops_per_sec: total_write_ops,
+                read_ops_per_sec: 0,
+                write_ops_per_sec: 0,
             })
         } else {
             None

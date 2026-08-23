@@ -46,3 +46,4 @@ docker = ["dep:bollard"]
 tokio-test = { workspace = true }
 axum-test = { version = "21", features = ["ws"] }
 serial_test = "2.0"
+tempfile = { workspace = true }

@@ -1,7 +1,7 @@
 use crate::error::Result;
 use crate::models::*;
 use bollard::container::{ListContainersOptions, StatsOptions};
-use bollard::models::{ContainerStats, ContainerSummaryInner};
+use bollard::models::{ContainerStats, ContainerSummary};
 use bollard::Docker;
 use chrono::{DateTime, Utc};
 use futures_util::StreamExt;
@@ -115,7 +115,13 @@ impl DockerCollector {
 
             if state == "running" {
                 if let Ok(mut stats_stream) = docker
-                    .stats(&id, Some(StatsOptions { stream: false }))
+                    .stats(
+                        &id,
+                        Some(StatsOptions {
+                            stream: false,
+                            one_shot: true,
+                        }),
+                    )
                     .await
                 {
                     if let Some(Ok(stats)) = stats_stream.next().await {
