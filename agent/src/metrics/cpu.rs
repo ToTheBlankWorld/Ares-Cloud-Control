@@ -70,7 +70,7 @@ mod tests {
     #[test]
     fn test_cpu_collector_creation() {
         let collector = CpuCollector::new();
-        assert!(collector.system.cpus().len() > 0);
+        assert!(!collector.system.cpus().is_empty());
     }
 
     #[test]

@@ -130,7 +130,7 @@ mod tests {
     #[test]
     fn test_disk_collector_creation() {
         let collector = DiskCollector::new();
-        assert!(collector.disks.list().len() >= 0);
+        assert!(!collector.disks.list().is_empty());
     }
 
     #[test]

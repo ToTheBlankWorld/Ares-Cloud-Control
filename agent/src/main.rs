@@ -129,7 +129,7 @@ mod tests {
     #[test]
     fn test_read_token_file_trims_whitespace() {
         let mut temp_file = NamedTempFile::new().unwrap();
-        write!(temp_file, "  test-token-123  \n").unwrap();
+        writeln!(temp_file, "  test-token-123  ").unwrap();
         let token = read_token_file(temp_file.path().to_str().unwrap()).unwrap();
         assert_eq!(token, "test-token-123");
     }

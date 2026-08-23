@@ -113,6 +113,7 @@ mod tests {
     #[test]
     fn test_gpu_collector_creation() {
         let collector = GpuCollector::new();
+        // Collector should be created successfully (either available or disabled)
         assert!(!collector.available || collector.available);
     }
 
@@ -120,9 +121,12 @@ mod tests {
     fn test_gpu_collection() {
         let collector = GpuCollector::new();
         let metrics = collector.collect().unwrap();
+        // Test that collect() succeeds and returns a valid result
         if !metrics.available {
+            // GPU/NVML not available - graceful degradation
             assert!(metrics.devices.is_none());
         } else {
+            // GPU available - should have valid device data
             assert!(metrics.devices.is_some());
             let devices = metrics.devices.unwrap();
             for dev in devices {
@@ -131,5 +135,7 @@ mod tests {
                 assert!(dev.utilization_percent <= 100.0);
             }
         }
+        // Test that collect() always succeeds (doesn't panic)
+        let _ = collector.collect().unwrap();
     }
 }
