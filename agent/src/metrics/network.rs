@@ -15,7 +15,6 @@ pub struct NetworkCollector {
 struct NetworkSnapshot {
     received: u64,
     transmitted: u64,
-    timestamp: Instant,
 }
 
 impl NetworkCollector {
@@ -32,7 +31,6 @@ impl NetworkCollector {
     }
 
     fn read_network_stats(nets: &Networks) -> HashMap<String, NetworkSnapshot> {
-        let now = Instant::now();
         nets.iter()
             .map(|(name, data)| {
                 (
@@ -40,7 +38,6 @@ impl NetworkCollector {
                     NetworkSnapshot {
                         received: data.total_received(),
                         transmitted: data.total_transmitted(),
-                        timestamp: now,
                     },
                 )
             })
@@ -85,7 +82,6 @@ impl NetworkCollector {
                 NetworkSnapshot {
                     received,
                     transmitted,
-                    timestamp: now,
                 },
             );
 

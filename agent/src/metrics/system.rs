@@ -6,7 +6,6 @@ use sysinfo::System;
 pub struct SystemCollector {
     system: System,
     boot_time: u64,
-    agent_start_time: std::time::Instant,
 }
 
 impl SystemCollector {
@@ -14,11 +13,7 @@ impl SystemCollector {
         let mut system = System::new_all();
         system.refresh_all();
         let boot_time = System::boot_time();
-        Self {
-            system,
-            boot_time,
-            agent_start_time: std::time::Instant::now(),
-        }
+        Self { system, boot_time }
     }
 
     pub fn collect(&mut self) -> Result<SystemInfo> {

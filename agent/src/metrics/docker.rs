@@ -19,10 +19,6 @@ pub struct DockerCollector {
 struct ContainerStatsSnapshot {
     cpu_total: u64,
     cpu_system: u64,
-    memory_usage: u64,
-    network_rx: u64,
-    network_tx: u64,
-    timestamp: std::time::Instant,
 }
 
 impl DockerCollector {
@@ -177,7 +173,7 @@ impl DockerCollector {
         stats: &Stats,
         prev_stats: &mut HashMap<String, ContainerStatsSnapshot>,
         container_id: &str,
-        elapsed: Duration,
+        _elapsed: Duration,
     ) -> Option<f32> {
         let cpu_total = stats.cpu_stats.cpu_usage.total_usage;
         let cpu_system = stats.cpu_stats.system_cpu_usage.unwrap_or(0);
@@ -185,7 +181,6 @@ impl DockerCollector {
         if let Some(prev) = prev_stats.get(container_id) {
             let cpu_delta = cpu_total.saturating_sub(prev.cpu_total) as f64;
             let system_delta = cpu_system.saturating_sub(prev.cpu_system) as f64;
-            let dt = elapsed.as_secs_f64().max(0.1);
 
             if system_delta > 0.0 && cpu_delta > 0.0 {
                 let percent = (cpu_delta / system_delta) * 100.0;
@@ -204,18 +199,6 @@ impl DockerCollector {
         ContainerStatsSnapshot {
             cpu_total,
             cpu_system,
-            memory_usage: stats.memory_stats.usage.unwrap_or(0),
-            network_rx: stats
-                .networks
-                .as_ref()
-                .map(|n| n.values().map(|net| net.rx_bytes).sum())
-                .unwrap_or(0),
-            network_tx: stats
-                .networks
-                .as_ref()
-                .map(|n| n.values().map(|net| net.tx_bytes).sum())
-                .unwrap_or(0),
-            timestamp: std::time::Instant::now(),
         }
     }
 }

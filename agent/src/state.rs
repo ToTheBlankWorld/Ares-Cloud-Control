@@ -51,10 +51,6 @@ impl MetricsState {
     pub async fn get_collector_status(&self) -> CollectorStatus {
         self.collector_status.read().await.clone()
     }
-
-    pub async fn last_update_elapsed(&self) -> Duration {
-        self.last_update.read().await.elapsed()
-    }
 }
 
 pub type SharedMetricsState = Arc<MetricsState>;

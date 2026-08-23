@@ -20,26 +20,8 @@ pub enum AgentError {
     #[error("Docker error: {0}")]
     Docker(#[from] bollard::errors::Error),
 
-    #[error("System info error: {0}")]
-    SysInfo(String),
-
-    #[error("Authentication error: {0}")]
-    Auth(String),
-
-    #[error("Metrics collection error: {0}")]
-    MetricsCollection(String),
-
-    #[error("WebSocket error: {0}")]
-    WebSocket(String),
-
     #[error("Invalid configuration: {0}")]
     InvalidConfig(String),
-
-    #[error("Not found: {0}")]
-    NotFound(String),
-
-    #[error("Internal error: {0}")]
-    Internal(String),
 
     #[error("Invalid server address: {0}")]
     InvalidAddress(#[from] std::net::AddrParseError),

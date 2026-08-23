@@ -15,7 +15,6 @@ pub struct DiskCollector {
 struct DiskIoSnapshot {
     read_bytes: u64,
     write_bytes: u64,
-    timestamp: Instant,
 }
 
 impl DiskCollector {
@@ -88,7 +87,6 @@ impl DiskCollector {
             let current = DiskIoSnapshot {
                 read_bytes,
                 write_bytes,
-                timestamp: now,
             };
 
             if let Some(prev) = self.prev_io.get(&name) {

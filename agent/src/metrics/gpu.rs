@@ -98,10 +98,6 @@ impl GpuCollector {
             })
         }
     }
-
-    pub fn is_available(&self) -> bool {
-        self.available
-    }
 }
 
 impl Default for GpuCollector {
