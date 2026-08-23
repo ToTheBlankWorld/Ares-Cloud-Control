@@ -9,7 +9,6 @@ pub mod system;
 pub mod temperature;
 
 use crate::error::Result;
-use crate::models::CollectorStatus;
 use crate::state::SharedMetricsState;
 use std::time::Duration;
 use tokio::time::interval;
