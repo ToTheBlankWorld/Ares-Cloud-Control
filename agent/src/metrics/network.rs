@@ -20,6 +20,7 @@ struct NetworkSnapshot {
 impl NetworkCollector {
     pub fn new() -> Self {
         let mut networks = Networks::new();
+        networks.refresh_list();
         networks.refresh();
         let prev_stats = Self::read_network_stats(&networks);
         Self {
@@ -45,6 +46,7 @@ impl NetworkCollector {
     }
 
     pub fn collect(&mut self) -> Result<NetworkMetrics> {
+        self.networks.refresh_list();
         self.networks.refresh();
 
         let now = Instant::now();

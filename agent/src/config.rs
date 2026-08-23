@@ -35,9 +35,14 @@ fn default_process_limit() -> usize {
     100
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct AuthConfig {
+    #[serde(default = "default_token_file")]
     pub token_file: String,
+}
+
+fn default_token_file() -> String {
+    "/etc/remotebtop/token".to_string()
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -78,7 +83,8 @@ impl AppConfig {
             .set_default("monitoring.process_limit", default_process_limit() as i64)?
             .set_default("gpu.enabled", false)?
             .set_default("docker.enabled", false)?
-            .set_default("docker.socket", default_docker_socket())?;
+            .set_default("docker.socket", default_docker_socket())?
+            .set_default("auth.token_file", default_token_file())?;
 
         if let Some(path) = config_path {
             if path.exists() {
@@ -119,7 +125,7 @@ mod tests {
 
     #[test]
     fn test_config_loading() {
-        let mut temp_file = NamedTempFile::new().unwrap();
+        let mut temp_file = NamedTempFile::with_suffix(".toml").unwrap();
         writeln!(
             temp_file,
             r#"
