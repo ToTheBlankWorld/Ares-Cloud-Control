@@ -2,10 +2,10 @@ use crate::error::Result;
 use crate::models::*;
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
-use sysinfo::{Network, NetworkExt, NetworksExt, System, SystemExt};
+use sysinfo::{NetworkData, Networks, System};
 
 pub struct NetworkCollector {
-    system: System,
+    networks: Networks,
     prev_stats: HashMap<String, NetworkSnapshot>,
     last_update: Option<Instant>,
     first_run: bool,
@@ -20,24 +20,23 @@ struct NetworkSnapshot {
 
 impl NetworkCollector {
     pub fn new() -> Self {
-        let mut system = System::new_all();
-        system.refresh_networks();
-        let prev_stats = Self::read_network_stats(&system);
+        let mut networks = Networks::new();
+        networks.refresh();
+        let prev_stats = Self::read_network_stats(&networks);
         Self {
-            system,
+            networks,
             prev_stats,
             last_update: None,
             first_run: true,
         }
     }
 
-    fn read_network_stats(sys: &System) -> HashMap<String, NetworkSnapshot> {
+    fn read_network_stats(nets: &Networks) -> HashMap<String, NetworkSnapshot> {
         let now = Instant::now();
-        sys.networks()
-            .iter()
+        nets.iter()
             .map(|(name, data)| {
                 (
-                    name.clone(),
+                    name.to_string(),
                     NetworkSnapshot {
                         received: data.total_received(),
                         transmitted: data.total_transmitted(),
@@ -49,7 +48,7 @@ impl NetworkCollector {
     }
 
     pub fn collect(&mut self) -> Result<NetworkMetrics> {
-        self.system.refresh_networks();
+        self.networks.refresh();
 
         let now = Instant::now();
         let elapsed = self.last_update.map_or(Duration::from_secs(1), |last| {
@@ -59,7 +58,7 @@ impl NetworkCollector {
 
         let mut interfaces = Vec::new();
 
-        for (name, data) in self.system.networks() {
+        for (name, data) in self.networks.iter() {
             let ipv4_addresses = Vec::new();
             let ipv6_addresses = Vec::new();
             let received = data.total_received();
@@ -82,7 +81,7 @@ impl NetworkCollector {
             }
 
             self.prev_stats.insert(
-                name.clone(),
+                name.to_string(),
                 NetworkSnapshot {
                     received,
                     transmitted,
@@ -91,7 +90,7 @@ impl NetworkCollector {
             );
 
             interfaces.push(NetworkInterfaceMetrics {
-                name: name.clone(),
+                name: name.to_string(),
                 ipv4_addresses,
                 ipv6_addresses,
                 received_bytes: received,
@@ -120,7 +119,7 @@ mod tests {
     #[test]
     fn test_network_collector_creation() {
         let collector = NetworkCollector::new();
-        assert!(collector.system.networks().len() >= 0);
+        assert!(collector.networks.iter().count() >= 0);
     }
 
     #[test]

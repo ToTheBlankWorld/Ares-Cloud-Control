@@ -1,7 +1,7 @@
 use crate::error::Result;
 use crate::models::*;
 use chrono::{DateTime, Utc};
-use sysinfo::{System, SystemExt};
+use sysinfo::System;
 
 pub struct SystemCollector {
     system: System,

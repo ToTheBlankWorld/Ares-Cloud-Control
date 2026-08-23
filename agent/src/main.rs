@@ -76,7 +76,7 @@ async fn main() -> Result<()> {
 
 fn read_token_file(path: &str) -> Result<String> {
     let content = std::fs::read_to_string(path).map_err(|e| {
-        crate::error::AgentError::Config(config::ConfigError::Message(format!(
+        crate::error::AgentError::Config(::config::ConfigError::Message(format!(
             "Failed to read token file '{}': {}",
             path, e
         )))

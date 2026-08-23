@@ -1,7 +1,7 @@
 use crate::error::Result;
 use crate::models::*;
 use std::collections::HashMap;
-use sysinfo::{Pid, Process, ProcessRefreshKind, ProcessStatus, System, SystemExt};
+use sysinfo::{Pid, Process, ProcessStatus, System};
 
 pub struct ProcessCollector {
     system: System,
@@ -13,7 +13,7 @@ pub struct ProcessCollector {
 impl ProcessCollector {
     pub fn new(limit: usize) -> Self {
         let mut system = System::new_all();
-        system.refresh_processes(ProcessRefreshKind::everything());
+        system.refresh_processes();
         let prev_cpu_times = Self::read_cpu_usage(&system);
         Self {
             system,
@@ -31,8 +31,7 @@ impl ProcessCollector {
     }
 
     pub fn collect(&mut self) -> Result<Vec<ProcessMetrics>> {
-        self.system
-            .refresh_processes(ProcessRefreshKind::everything().with_cpu());
+        self.system.refresh_processes();
 
         let mut processes: Vec<ProcessMetrics> = self
             .system
@@ -70,7 +69,7 @@ impl ProcessCollector {
                         .unwrap_or_else(|| "unknown".to_string()),
                     cpu_percent: smoothed_cpu,
                     memory_bytes: proc_.memory(),
-                    thread_count: proc_.thread_count().unwrap_or(0),
+                    thread_count: 0, // thread_count() not available in sysinfo 0.30
                     state,
                     start_time: start_time / 1_000_000,
                     run_time,
@@ -100,8 +99,7 @@ impl ProcessCollector {
         limit: usize,
         offset: usize,
     ) -> Result<Vec<ProcessMetrics>> {
-        self.system
-            .refresh_processes(ProcessRefreshKind::everything().with_cpu());
+        self.system.refresh_processes();
 
         let mut processes: Vec<ProcessMetrics> = self
             .system
@@ -139,7 +137,7 @@ impl ProcessCollector {
                         .unwrap_or_else(|| "unknown".to_string()),
                     cpu_percent: smoothed_cpu,
                     memory_bytes: proc_.memory(),
-                    thread_count: proc_.thread_count().unwrap_or(0),
+                    thread_count: 0,
                     state,
                     start_time: start_time / 1_000_000,
                     run_time,

@@ -2,10 +2,10 @@ use crate::error::Result;
 use crate::models::*;
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
-use sysinfo::{Disk, DiskExt, System, SystemExt};
+use sysinfo::{Disk, Disks, System};
 
 pub struct DiskCollector {
-    system: System,
+    disks: Disks,
     prev_io: HashMap<String, DiskIoSnapshot>,
     last_update: Option<Instant>,
 }
@@ -19,17 +19,17 @@ struct DiskIoSnapshot {
 
 impl DiskCollector {
     pub fn new() -> Self {
-        let mut system = System::new_all();
-        system.refresh_disks();
+        let mut disks = Disks::new();
+        disks.refresh(true);
         Self {
-            system,
+            disks,
             prev_io: HashMap::new(),
             last_update: None,
         }
     }
 
     pub fn collect(&mut self) -> Result<DiskMetrics> {
-        self.system.refresh_disks();
+        self.disks.refresh(true);
 
         let now = Instant::now();
         let elapsed = self.last_update.map_or(Duration::from_secs(1), |last| {
@@ -41,7 +41,7 @@ impl DiskCollector {
         let mut total_read_bytes = 0u64;
         let mut total_write_bytes = 0u64;
 
-        for disk in self.system.disks() {
+        for disk in self.disks.list() {
             let total = disk.total_space();
             let available = disk.available_space();
             let used = total.saturating_sub(available);
@@ -115,7 +115,7 @@ mod tests {
     #[test]
     fn test_disk_collector_creation() {
         let collector = DiskCollector::new();
-        assert!(collector.system.disks().len() >= 0);
+        assert!(collector.disks.list().len() >= 0);
     }
 
     #[test]

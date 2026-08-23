@@ -59,13 +59,15 @@ impl GpuCollector {
                     .ok();
                 let fan_speed = device.fan_speed(0).ok();
 
+                let mem = memory_info.as_ref();
+
                 devices.push(GpuDeviceMetrics {
                     index: i,
                     name,
                     utilization_percent: utilization.map(|u| u.gpu as f32).unwrap_or(0.0),
-                    memory_total_bytes: memory_info.map(|m| m.total).unwrap_or(0),
-                    memory_used_bytes: memory_info.map(|m| m.used).unwrap_or(0),
-                    memory_free_bytes: memory_info.map(|m| m.free).unwrap_or(0),
+                    memory_total_bytes: mem.map(|m| m.total).unwrap_or(0),
+                    memory_used_bytes: mem.map(|m| m.used).unwrap_or(0),
+                    memory_free_bytes: mem.map(|m| m.free).unwrap_or(0),
                     temperature_celsius: temperature.map(|t| t as f32),
                     power_usage_watts: power_usage.map(|p| p as f32 / 1000.0),
                     power_limit_watts: power_limit.map(|p| p as f32 / 1000.0),

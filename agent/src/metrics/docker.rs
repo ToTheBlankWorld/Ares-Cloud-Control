@@ -1,7 +1,7 @@
 use crate::error::Result;
 use crate::models::*;
 use bollard::container::{ListContainersOptions, StatsOptions};
-use bollard::models::{ContainerStats, ContainerSummary};
+use bollard::models::ContainerSummary;
 use bollard::Docker;
 use chrono::{DateTime, Utc};
 use futures_util::StreamExt;
@@ -102,10 +102,6 @@ impl DockerCollector {
             let created = container.created;
             let created_dt =
                 DateTime::from_timestamp(created as i64, 0).unwrap_or_else(|| Utc::now());
-            let started_at = container
-                .started_at
-                .and_then(|t| DateTime::parse_from_rfc3339(&t).ok())
-                .map(|t| t.with_timezone(&Utc));
 
             let mut cpu_percent = None;
             let mut memory_bytes = None;
@@ -114,32 +110,29 @@ impl DockerCollector {
             let mut network_tx_bytes = None;
 
             if state == "running" {
-                if let Ok(mut stats_stream) = docker
-                    .stats(
-                        &id,
-                        Some(StatsOptions {
-                            stream: false,
-                            one_shot: true,
-                        }),
-                    )
-                    .await
-                {
-                    if let Some(Ok(stats)) = stats_stream.next().await {
-                        cpu_percent =
-                            Self::calculate_cpu_percent(&stats, &mut self.prev_stats, &id, elapsed);
-                        memory_bytes = stats.memory_stats.usage;
-                        memory_limit_bytes = stats.memory_stats.limit;
+                let mut stats_stream = docker.stats(
+                    &id,
+                    Some(StatsOptions {
+                        stream: false,
+                        one_shot: true,
+                    }),
+                );
 
-                        if let Some(networks) = &stats.networks {
-                            let mut rx = 0u64;
-                            let mut tx = 0u64;
-                            for (_, net) in networks {
-                                rx += net.rx_bytes;
-                                tx += net.tx_bytes;
-                            }
-                            network_rx_bytes = Some(rx);
-                            network_tx_bytes = Some(tx);
+                if let Some(Ok(stats)) = stats_stream.next().await {
+                    cpu_percent =
+                        Self::calculate_cpu_percent(&stats, &mut self.prev_stats, &id, elapsed);
+                    memory_bytes = stats.memory_stats.usage;
+                    memory_limit_bytes = stats.memory_stats.limit;
+
+                    if let Some(networks) = &stats.networks {
+                        let mut rx = 0u64;
+                        let mut tx = 0u64;
+                        for (_, net) in networks {
+                            rx += net.rx_bytes;
+                            tx += net.tx_bytes;
                         }
+                        network_rx_bytes = Some(rx);
+                        network_tx_bytes = Some(tx);
                     }
                 }
             }
@@ -155,9 +148,9 @@ impl DockerCollector {
                 memory_limit_bytes,
                 network_rx_bytes,
                 network_tx_bytes,
-                restart_count: container.restart_count.map(|c| c as u64),
+                restart_count: None, // Not available in ContainerSummary
                 created: created_dt,
-                started_at,
+                started_at: None, // Not available in ContainerSummary
             });
         }
 
@@ -168,7 +161,7 @@ impl DockerCollector {
     }
 
     fn calculate_cpu_percent(
-        stats: &ContainerStats,
+        stats: &bollard::models::ContainerStats,
         prev_stats: &mut HashMap<String, ContainerStatsSnapshot>,
         container_id: &str,
         elapsed: Duration,
@@ -192,7 +185,7 @@ impl DockerCollector {
         None
     }
 
-    fn create_snapshot(stats: &ContainerStats) -> ContainerStatsSnapshot {
+    fn create_snapshot(stats: &bollard::models::ContainerStats) -> ContainerStatsSnapshot {
         let cpu_total = stats.cpu_stats.cpu_usage.total_usage;
         let cpu_system = stats.cpu_stats.system_cpu_usage.unwrap_or(0);
         ContainerStatsSnapshot {

@@ -40,6 +40,9 @@ pub enum AgentError {
 
     #[error("Internal error: {0}")]
     Internal(String),
+
+    #[error("Invalid server address: {0}")]
+    InvalidAddress(#[from] std::net::AddrParseError),
 }
 
 pub type Result<T> = std::result::Result<T, AgentError>;

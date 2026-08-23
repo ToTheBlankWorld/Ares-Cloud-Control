@@ -1,4 +1,4 @@
-use crate::error::{AgentError, Result};
+use crate::error::Result;
 use crate::models::*;
 use crate::state::SharedMetricsState;
 use crate::websocket::websocket_handler;

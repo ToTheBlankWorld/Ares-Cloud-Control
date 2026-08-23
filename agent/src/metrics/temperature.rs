@@ -1,28 +1,28 @@
 use crate::error::Result;
 use crate::models::*;
 use std::collections::HashMap;
-use sysinfo::{Component, ComponentExt, System, SystemExt};
+use sysinfo::{Components, System};
 
 pub struct TemperatureCollector {
-    system: System,
+    components: Components,
 }
 
 impl TemperatureCollector {
     pub fn new() -> Self {
-        let mut system = System::new_all();
-        system.refresh_components();
-        Self { system }
+        let mut components = Components::new();
+        components.refresh();
+        Self { components }
     }
 
     pub fn collect(&mut self) -> Result<TemperatureMetrics> {
-        self.system.refresh_components();
+        self.components.refresh();
 
         let mut cpu_package = None;
         let mut cpu_cores = Vec::new();
         let mut gpu = Vec::new();
         let mut other = HashMap::new();
 
-        for component in self.system.components() {
+        for component in self.components.iter() {
             let label = component.label().to_lowercase();
             let temp = component.temperature();
 
@@ -38,7 +38,7 @@ impl TemperatureCollector {
         }
 
         if cpu_cores.is_empty() {
-            for component in self.system.components() {
+            for component in self.components.iter() {
                 let label = component.label().to_lowercase();
                 if label.starts_with("core") {
                     cpu_cores.push(Some(component.temperature()));

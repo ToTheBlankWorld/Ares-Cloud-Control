@@ -22,24 +22,33 @@ pub async fn websocket_handler(
 }
 
 async fn handle_socket(socket: WebSocket, state: SharedMetricsState) {
-    let (mut sender, mut receiver) = socket.split();
+    let (sender, mut receiver) = socket.split();
     let mut interval = interval(Duration::from_millis(1000));
     info!("WebSocket client connected");
 
-    // Channel for backpressure handling - bounded to prevent unbounded memory growth
-    let (tx, mut rx) = mpsc::channel::<String>(10);
+    // Channel for outgoing messages - bounded to prevent unbounded memory growth
+    let (tx, mut rx) = mpsc::channel::<WsMessage>(10);
 
-    // Spawn a task to handle sending with backpressure
-    let mut send_task_sender = sender.clone();
+    // Spawn a single writer task that owns the sender
     let send_task = tokio::spawn(async move {
-        while let Some(json) = rx.recv().await {
-            if send_task_sender
-                .send(Message::Text(json.into()))
-                .await
-                .is_err()
-            {
-                debug!("WebSocket client disconnected during send");
-                break;
+        let mut sender = sender;
+        while let Some(msg) = rx.recv().await {
+            match msg {
+                WsMessage::Text(json) => {
+                    if sender.send(Message::Text(json.into())).await.is_err() {
+                        debug!("WebSocket client disconnected during send");
+                        break;
+                    }
+                }
+                WsMessage::Pong(data) => {
+                    if sender.send(Message::Pong(data)).await.is_err() {
+                        break;
+                    }
+                }
+                WsMessage::Close => {
+                    let _ = sender.send(Message::Close(None)).await;
+                    break;
+                }
             }
         }
     });
@@ -50,8 +59,7 @@ async fn handle_socket(socket: WebSocket, state: SharedMetricsState) {
                 let snapshot = state.get_snapshot().await;
                 match serde_json::to_string(&snapshot) {
                     Ok(json) => {
-                        // Non-blocking send with backpressure - drop if buffer full
-                        if tx.try_send(json).is_err() {
+                        if tx.try_send(WsMessage::Text(json)).is_err() {
                             debug!("WebSocket send buffer full, dropping frame (backpressure)");
                         }
                     }
@@ -65,10 +73,11 @@ async fn handle_socket(socket: WebSocket, state: SharedMetricsState) {
                 match msg {
                     Some(Ok(Message::Close(_))) => {
                         debug!("WebSocket client sent close frame");
+                        let _ = tx.try_send(WsMessage::Close);
                         break;
                     }
                     Some(Ok(Message::Ping(data))) => {
-                        if sender.send(Message::Pong(data)).await.is_err() {
+                        if tx.try_send(WsMessage::Pong(data)).is_err() {
                             break;
                         }
                     }
@@ -93,6 +102,12 @@ async fn handle_socket(socket: WebSocket, state: SharedMetricsState) {
     drop(tx);
     let _ = send_task.await;
     info!("WebSocket client disconnected");
+}
+
+enum WsMessage {
+    Text(String),
+    Pong(Vec<u8>),
+    Close,
 }
 
 #[cfg(test)]
