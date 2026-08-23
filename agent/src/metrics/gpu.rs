@@ -113,7 +113,7 @@ mod tests {
     #[test]
     fn test_gpu_collector_creation() {
         let collector = GpuCollector::new();
-        assert!(!collector.is_available() || collector.is_available());
+        assert!(!collector.available || collector.available);
     }
 
     #[test]

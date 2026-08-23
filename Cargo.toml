@@ -50,7 +50,7 @@ subtle = "2.5"
 
 # Testing
 tokio-test = "0.4"
-axum-test = { version = "15", features = ["ws"] }
+axum-test = { version = "21", features = ["ws"] }
 tempfile = "3.8"
 
 [profile.release]
