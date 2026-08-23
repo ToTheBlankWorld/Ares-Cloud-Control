@@ -47,20 +47,12 @@ impl MetricsOrchestrator {
             gpu_collector: if gpu_enabled {
                 gpu::GpuCollector::new()
             } else {
-                gpu::GpuCollector {
-                    nvml: None,
-                    available: false,
-                }
+                gpu::GpuCollector::disabled()
             },
             docker_collector: if docker_enabled {
                 docker::DockerCollector::new(&docker_socket)
             } else {
-                docker::DockerCollector {
-                    docker: None,
-                    available: false,
-                    prev_stats: std::collections::HashMap::new(),
-                    last_update: None,
-                }
+                docker::DockerCollector::disabled()
             },
             system_collector: system::SystemCollector::new(),
             temperature_collector: temperature::TemperatureCollector::new(),

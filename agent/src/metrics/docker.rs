@@ -44,6 +44,15 @@ impl DockerCollector {
         }
     }
 
+    pub fn disabled() -> Self {
+        Self {
+            docker: None,
+            available: false,
+            prev_stats: HashMap::new(),
+            last_update: None,
+        }
+    }
+
     pub async fn collect(&mut self) -> Result<DockerMetrics> {
         if !self.available {
             return Ok(DockerMetrics {

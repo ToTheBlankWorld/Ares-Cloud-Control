@@ -27,6 +27,14 @@ impl GpuCollector {
         Self { nvml, available }
     }
 
+    pub fn disabled() -> Self {
+        Self {
+            #[cfg(target_os = "linux")]
+            nvml: None,
+            available: false,
+        }
+    }
+
     pub fn collect(&self) -> Result<GpuMetrics> {
         if !self.available {
             return Ok(GpuMetrics {
