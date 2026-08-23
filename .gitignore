@@ -32,4 +32,4 @@ logs/
 
 # Temporary files
 tmp/
-temp/
+temp/rustup-init.exe
