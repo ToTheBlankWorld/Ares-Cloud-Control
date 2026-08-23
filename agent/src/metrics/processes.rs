@@ -121,7 +121,7 @@ mod tests {
             assert!(!proc.name.is_empty());
             assert!(proc.cpu_percent >= 0.0);
             assert!(proc.memory_bytes >= proc.memory_bytes); // Valid invariant
-            assert!(!proc.state.to_string().is_empty());
+            assert!(!format!("{:?}", proc.state).is_empty());
         }
         // Test that collect() can be called multiple times
         let _ = collector.collect().unwrap();

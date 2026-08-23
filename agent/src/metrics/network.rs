@@ -115,7 +115,7 @@ mod tests {
     #[test]
     fn test_network_collector_creation() {
         let collector = NetworkCollector::new();
-        assert!(!collector.networks.iter().is_empty());
+        assert!(collector.networks.iter().next().is_some());
     }
 
     #[test]
