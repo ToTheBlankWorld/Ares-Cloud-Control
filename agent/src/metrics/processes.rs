@@ -103,7 +103,6 @@ impl Default for ProcessCollector {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::models::ProcessSortBy;
 
     #[test]
     fn test_process_collector_creation() {

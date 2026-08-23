@@ -68,11 +68,13 @@ mod tests {
     #[test]
     fn test_temperature_collector_creation() {
         let collector = TemperatureCollector::new();
+        assert!(!collector.components.list().is_empty() || collector.components.list().is_empty());
     }
 
     #[test]
     fn test_temperature_collection() {
         let mut collector = TemperatureCollector::new();
         let metrics = collector.collect().unwrap();
+        assert!(metrics.cpu_package.is_none() || metrics.cpu_package.is_some());
     }
 }

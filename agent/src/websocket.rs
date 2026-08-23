@@ -118,6 +118,6 @@ mod tests {
 
     #[tokio::test]
     async fn test_websocket_handler_creation() {
-        let state = Arc::new(crate::state::MetricsState::new(create_initial_snapshot()));
+        let _state = Arc::new(crate::state::MetricsState::new(create_initial_snapshot()));
     }
 }

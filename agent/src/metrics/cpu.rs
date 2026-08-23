@@ -37,9 +37,9 @@ impl CpuCollector {
 
         let load = sysinfo::System::load_average();
         let load_average = LoadAverage {
-            one: load.one as f64,
-            five: load.five as f64,
-            fifteen: load.fifteen as f64,
+            one: load.one,
+            five: load.five,
+            fifteen: load.fifteen,
         };
 
         Ok(CpuMetrics {

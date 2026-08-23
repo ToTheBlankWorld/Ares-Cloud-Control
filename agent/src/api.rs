@@ -3,12 +3,13 @@ use crate::state::SharedMetricsState;
 use crate::websocket::websocket_handler;
 use axum::{
     extract::{Query, State},
-    http::{HeaderMap, StatusCode},
+    http::{HeaderMap, HeaderName, HeaderValue, StatusCode},
     middleware::{self, Next},
     response::{IntoResponse, Json, Response},
     routing::get,
     Router,
 };
+use std::sync::Arc;
 use subtle::ConstantTimeEq;
 use tracing::{debug, warn};
 
@@ -103,9 +104,9 @@ async fn processes_handler(
                 .partial_cmp(&a.cpu_percent)
                 .unwrap_or(std::cmp::Ordering::Equal)
         }),
-        ProcessSortBy::Memory => processes.sort_by(|a, b| b.memory_bytes.cmp(&a.memory_bytes)),
-        ProcessSortBy::Pid => processes.sort_by(|a, b| a.pid.cmp(&b.pid)),
-        ProcessSortBy::Name => processes.sort_by(|a, b| a.name.cmp(&b.name)),
+        ProcessSortBy::Memory => processes.sort_by_key(|p| std::cmp::Reverse(p.memory_bytes)),
+        ProcessSortBy::Pid => processes.sort_by_key(|p| p.pid),
+        ProcessSortBy::Name => processes.sort_by_key(|p| p.name.clone()),
     }
 
     let start = offset.min(processes.len());
@@ -164,6 +165,7 @@ mod tests {
     use super::*;
     use crate::state::create_initial_snapshot;
     use axum_test::TestServer;
+    use http::{HeaderName, HeaderValue};
     use std::sync::Arc;
 
     #[tokio::test]
@@ -196,7 +198,10 @@ mod tests {
 
         let response = server
             .get("/api/system")
-            .add_header("Authorization", "Bearer test-token")
+            .add_header(
+                HeaderName::from_static("authorization"),
+                HeaderValue::from_static("Bearer test-token"),
+            )
             .await;
         response.assert_status_ok();
     }
@@ -209,7 +214,10 @@ mod tests {
 
         let response = server
             .get("/api/system")
-            .add_header("Authorization", "Token test-token")
+            .add_header(
+                HeaderName::from_static("authorization"),
+                HeaderValue::from_static("Token test-token"),
+            )
             .await;
         response.assert_status_ok();
     }
@@ -222,7 +230,10 @@ mod tests {
 
         let response = server
             .get("/api/system")
-            .add_header("Authorization", "Bearer wrong-token")
+            .add_header(
+                HeaderName::from_static("authorization"),
+                HeaderValue::from_static("Bearer wrong-token"),
+            )
             .await;
         response.assert_status(StatusCode::UNAUTHORIZED);
     }
@@ -235,7 +246,10 @@ mod tests {
 
         let response = server
             .get("/api/system")
-            .add_header("Authorization", "Basic dXNlcjpwYXNz")
+            .add_header(
+                HeaderName::from_static("authorization"),
+                HeaderValue::from_static("Basic dXNlcjpwYXNz"),
+            )
             .await;
         response.assert_status(StatusCode::UNAUTHORIZED);
     }

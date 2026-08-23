@@ -105,8 +105,7 @@ impl DockerCollector {
             let status = container.status.clone().unwrap_or_default();
             let state = container.state.clone().unwrap_or_default();
             let created = container.created.unwrap_or(0);
-            let created_dt =
-                DateTime::from_timestamp(created as i64, 0).unwrap_or_else(|| Utc::now());
+            let created_dt = DateTime::from_timestamp(created, 0).unwrap_or_else(Utc::now);
 
             let mut cpu_percent = None;
             let mut memory_bytes = None;
@@ -132,7 +131,7 @@ impl DockerCollector {
                     if let Some(networks) = &stats.networks {
                         let mut rx = 0u64;
                         let mut tx = 0u64;
-                        for (_, net) in networks {
+                        for net in networks.values() {
                             rx += net.rx_bytes;
                             tx += net.tx_bytes;
                         }
