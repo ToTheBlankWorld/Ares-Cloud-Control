@@ -113,8 +113,10 @@ mod tests {
     #[test]
     fn test_gpu_collector_creation() {
         let collector = GpuCollector::new();
-        // Collector should be created successfully (either available or disabled)
-        assert!(!collector.available || collector.available);
+        // Collector should be created successfully (available is a boolean, always either true or false)
+        let _ = collector.available;
+        let disabled = GpuCollector::disabled();
+        assert!(!disabled.available);
     }
 
     #[test]
