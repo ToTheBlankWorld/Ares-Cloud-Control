@@ -1,8 +1,7 @@
 use crate::error::Result;
 use crate::models::*;
+use bollard::container::Stats;
 use bollard::container::{ListContainersOptions, StatsOptions};
-use bollard::models::ContainerSummary;
-use bollard::models::Stats;
 use bollard::Docker;
 use chrono::{DateTime, Utc};
 use futures_util::StreamExt;
