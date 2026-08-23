@@ -3,6 +3,8 @@ Description=RemoteBtop Monitoring Agent
 Documentation=https://github.com/yourusername/remote-btop
 After=network-online.target
 Wants=network-online.target
+StartLimitIntervalSec=60
+StartLimitBurst=3
 
 [Service]
 Type=simple
@@ -11,8 +13,6 @@ Group=remotebtop
 ExecStart=/usr/local/bin/remotebtop-agent /etc/remotebtop/config.toml
 Restart=on-failure
 RestartSec=5
-StartLimitIntervalSec=60
-StartLimitBurst=3
 StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=remotebtop-agent
