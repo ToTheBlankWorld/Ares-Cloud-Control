@@ -171,7 +171,7 @@ mod tests {
     async fn test_health_endpoint() {
         let state = Arc::new(crate::state::MetricsState::new(create_initial_snapshot()));
         let app = create_router(state, "test-token".to_string());
-        let server = TestServer::new(app).unwrap();
+        let server = TestServer::new(app);
 
         let response = server.get("/api/health").await;
         response.assert_status_ok();
@@ -183,7 +183,7 @@ mod tests {
     async fn test_auth_required() {
         let state = Arc::new(crate::state::MetricsState::new(create_initial_snapshot()));
         let app = create_router(state, "test-token".to_string());
-        let server = TestServer::new(app).unwrap();
+        let server = TestServer::new(app);
 
         let response = server.get("/api/system").await;
         response.assert_status(StatusCode::UNAUTHORIZED);
@@ -193,7 +193,7 @@ mod tests {
     async fn test_auth_with_bearer() {
         let state = Arc::new(crate::state::MetricsState::new(create_initial_snapshot()));
         let app = create_router(state, "test-token".to_string());
-        let server = TestServer::new(app).unwrap();
+        let server = TestServer::new(app);
 
         let response = server
             .get("/api/system")
@@ -209,7 +209,7 @@ mod tests {
     async fn test_auth_with_token_prefix() {
         let state = Arc::new(crate::state::MetricsState::new(create_initial_snapshot()));
         let app = create_router(state, "test-token".to_string());
-        let server = TestServer::new(app).unwrap();
+        let server = TestServer::new(app);
 
         let response = server
             .get("/api/system")
@@ -225,7 +225,7 @@ mod tests {
     async fn test_auth_rejects_wrong_token() {
         let state = Arc::new(crate::state::MetricsState::new(create_initial_snapshot()));
         let app = create_router(state, "test-token".to_string());
-        let server = TestServer::new(app).unwrap();
+        let server = TestServer::new(app);
 
         let response = server
             .get("/api/system")
@@ -241,7 +241,7 @@ mod tests {
     async fn test_auth_rejects_malformed_header() {
         let state = Arc::new(crate::state::MetricsState::new(create_initial_snapshot()));
         let app = create_router(state, "test-token".to_string());
-        let server = TestServer::new(app).unwrap();
+        let server = TestServer::new(app);
 
         let response = server
             .get("/api/system")
