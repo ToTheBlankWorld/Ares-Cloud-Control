@@ -12,7 +12,7 @@ use axum::{
 };
 use std::sync::Arc;
 use subtle::ConstantTimeEq;
-use tracing::{debug, info, warn};
+use tracing::{debug, warn};
 
 pub fn create_router(state: SharedMetricsState, token: String) -> Router {
     let protected_router = Router::new()
@@ -130,7 +130,7 @@ async fn auth_middleware(
     headers: HeaderMap,
     req: axum::http::Request<axum::body::Body>,
     next: Next,
-) -> Result<Response, StatusCode> {
+) -> std::result::Result<Response, StatusCode> {
     let auth_header = headers.get("authorization").and_then(|h| h.to_str().ok());
 
     let valid = match auth_header {

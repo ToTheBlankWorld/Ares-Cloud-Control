@@ -20,7 +20,6 @@ struct DiskIoSnapshot {
 impl DiskCollector {
     pub fn new() -> Self {
         let mut system = System::new_all();
-        system.refresh_disks_list();
         system.refresh_disks();
         Self {
             system,
@@ -30,7 +29,6 @@ impl DiskCollector {
     }
 
     pub fn collect(&mut self) -> Result<DiskMetrics> {
-        self.system.refresh_disks_list();
         self.system.refresh_disks();
 
         let now = Instant::now();

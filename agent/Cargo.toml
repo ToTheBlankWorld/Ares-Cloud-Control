@@ -31,7 +31,6 @@ futures-util = { workspace = true }
 subtle = { workspace = true }
 
 # Additional dependencies
-axum-extra = { version = "0.9", features = ["cookie", "cookie-signed"] }
 http = "1.0"
 hyper = { version = "1.0", features = ["full"] }
 hyper-util = { version = "0.1", features = ["full"] }
@@ -44,6 +43,6 @@ docker = ["dep:bollard"]
 
 [dev-dependencies]
 tokio-test = { workspace = true }
-axum-test = { version = "21", features = ["ws"] }
+axum-test = { workspace = true }
 serial_test = "2.0"
 tempfile = { workspace = true }

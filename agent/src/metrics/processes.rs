@@ -62,7 +62,7 @@ impl ProcessCollector {
 
                 ProcessMetrics {
                     pid: pid.as_u32(),
-                    name: proc_.name().to_string_lossy().to_string(),
+                    name: proc_.name().to_string(),
                     command: proc_.cmd().join(" "),
                     user: proc_
                         .user_id()
@@ -131,7 +131,7 @@ impl ProcessCollector {
 
                 ProcessMetrics {
                     pid: pid.as_u32(),
-                    name: proc_.name().to_string_lossy().to_string(),
+                    name: proc_.name().to_string(),
                     command: proc_.cmd().join(" "),
                     user: proc_
                         .user_id()

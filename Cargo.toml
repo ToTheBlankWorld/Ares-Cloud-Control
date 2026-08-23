@@ -11,9 +11,9 @@ authors = ["RemoteBtop Contributors"]
 [workspace.dependencies]
 # Async runtime
 tokio = { version = "1.38", features = ["full"] }
-axum = { version = "0.7", features = ["ws", "json"] }
-tower = { version = "0.4", features = ["limit"] }
-tower-http = { version = "0.5", features = ["trace", "cors"] }
+axum = { version = "0.8", features = ["ws", "json"] }
+tower = { version = "0.5", features = ["limit"] }
+tower-http = { version = "0.6", features = ["trace", "cors"] }
 
 # Serialization
 serde = { version = "1.0", features = ["derive"] }
@@ -50,7 +50,7 @@ subtle = "2.5"
 
 # Testing
 tokio-test = "0.4"
-axum-test = { version = "21", features = ["ws"] }
+axum-test = { version = "14" }
 tempfile = "3.8"
 
 [profile.release]

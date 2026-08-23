@@ -115,11 +115,12 @@ async fn shutdown_signal() {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::io::Write;
+    use tempfile::NamedTempFile;
 
     #[test]
     fn test_read_token_file() {
-        use std::io::Write;
-        let mut temp_file = tempfile::NamedTempFile::new().unwrap();
+        let mut temp_file = NamedTempFile::new().unwrap();
         write!(temp_file, "test-token-123").unwrap();
         let token = read_token_file(temp_file.path().to_str().unwrap()).unwrap();
         assert_eq!(token, "test-token-123");
@@ -127,8 +128,7 @@ mod tests {
 
     #[test]
     fn test_read_token_file_trims_whitespace() {
-        use std::io::Write;
-        let mut temp_file = tempfile::NamedTempFile::new().unwrap();
+        let mut temp_file = NamedTempFile::new().unwrap();
         write!(temp_file, "  test-token-123  \n").unwrap();
         let token = read_token_file(temp_file.path().to_str().unwrap()).unwrap();
         assert_eq!(token, "test-token-123");

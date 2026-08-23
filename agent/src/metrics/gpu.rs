@@ -3,18 +3,18 @@ use crate::models::*;
 use std::sync::OnceLock;
 
 #[cfg(target_os = "linux")]
-use nvml_wrapper::{enum_wrappers::device::TemperatureSensor, Nvml};
+use nvml_wrapper::{enum_wrappers::device::TemperatureSensor, NVML};
 
 pub struct GpuCollector {
     #[cfg(target_os = "linux")]
-    nvml: Option<Nvml>,
+    nvml: Option<NVML>,
     available: bool,
 }
 
 impl GpuCollector {
     pub fn new() -> Self {
         #[cfg(target_os = "linux")]
-        let nvml = Nvml::init().ok();
+        let nvml = NVML::init().ok();
         #[cfg(not(target_os = "linux"))]
         let nvml: Option<()> = None;
 
