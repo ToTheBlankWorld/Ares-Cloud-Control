@@ -51,7 +51,6 @@ impl DiskCollector {
             }
         }
 
-        let now = Instant::now();
         let mut filesystems = Vec::new();
         let mut total_read_bytes = 0u64;
         let mut total_write_bytes = 0u64;
