@@ -3,13 +3,12 @@ use crate::state::SharedMetricsState;
 use crate::websocket::websocket_handler;
 use axum::{
     extract::{Query, State},
-    http::{HeaderMap, HeaderName, HeaderValue, StatusCode},
+    http::{HeaderMap, StatusCode},
     middleware::{self, Next},
     response::{IntoResponse, Json, Response},
     routing::get,
     Router,
 };
-use std::sync::Arc;
 use subtle::ConstantTimeEq;
 use tracing::{debug, warn};
 
