@@ -210,7 +210,10 @@ mod tests {
         assert_eq!(config.docker.socket, "/var/run/docker.sock");
         assert!(config.cors.allowed_origins.is_empty());
         assert_eq!(config.cors.allowed_methods, vec!["GET", "POST", "OPTIONS"]);
-        assert_eq!(config.cors.allowed_headers, vec!["Authorization", "Content-Type"]);
+        assert_eq!(
+            config.cors.allowed_headers,
+            vec!["Authorization", "Content-Type"]
+        );
         assert!(!config.cors.allow_credentials);
         assert_eq!(config.cors.max_age, 86400);
     }

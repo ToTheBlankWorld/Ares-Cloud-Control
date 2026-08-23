@@ -207,6 +207,7 @@ fn build_cors_layer(config: CorsConfig) -> CorsLayer {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::config::CorsConfig;
     use crate::state::create_initial_snapshot;
     use axum_test::TestServer;
     use http::{HeaderName, HeaderValue};
@@ -215,7 +216,7 @@ mod tests {
     #[tokio::test]
     async fn test_health_endpoint() {
         let state = Arc::new(crate::state::MetricsState::new(create_initial_snapshot()));
-        let app = create_router(state, "test-token".to_string());
+        let app = create_router(state, "test-token".to_string(), CorsConfig::default());
         let server = TestServer::new(app);
 
         let response = server.get("/api/health").await;
@@ -227,7 +228,7 @@ mod tests {
     #[tokio::test]
     async fn test_auth_required() {
         let state = Arc::new(crate::state::MetricsState::new(create_initial_snapshot()));
-        let app = create_router(state, "test-token".to_string());
+        let app = create_router(state, "test-token".to_string(), CorsConfig::default());
         let server = TestServer::new(app);
 
         let response = server.get("/api/system").await;
@@ -237,7 +238,7 @@ mod tests {
     #[tokio::test]
     async fn test_auth_with_bearer() {
         let state = Arc::new(crate::state::MetricsState::new(create_initial_snapshot()));
-        let app = create_router(state, "test-token".to_string());
+        let app = create_router(state, "test-token".to_string(), CorsConfig::default());
         let server = TestServer::new(app);
 
         let response = server
@@ -253,7 +254,7 @@ mod tests {
     #[tokio::test]
     async fn test_auth_with_token_prefix() {
         let state = Arc::new(crate::state::MetricsState::new(create_initial_snapshot()));
-        let app = create_router(state, "test-token".to_string());
+        let app = create_router(state, "test-token".to_string(), CorsConfig::default());
         let server = TestServer::new(app);
 
         let response = server
@@ -269,7 +270,7 @@ mod tests {
     #[tokio::test]
     async fn test_auth_rejects_wrong_token() {
         let state = Arc::new(crate::state::MetricsState::new(create_initial_snapshot()));
-        let app = create_router(state, "test-token".to_string());
+        let app = create_router(state, "test-token".to_string(), CorsConfig::default());
         let server = TestServer::new(app);
 
         let response = server
@@ -285,7 +286,7 @@ mod tests {
     #[tokio::test]
     async fn test_auth_rejects_malformed_header() {
         let state = Arc::new(crate::state::MetricsState::new(create_initial_snapshot()));
-        let app = create_router(state, "test-token".to_string());
+        let app = create_router(state, "test-token".to_string(), CorsConfig::default());
         let server = TestServer::new(app);
 
         let response = server
