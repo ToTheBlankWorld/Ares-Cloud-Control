@@ -1,0 +1,35 @@
+# Rust
+target/
+**/*.rs.bk
+Cargo.lock
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets
+*.token
+.env
+.env.local
+.env.*.local
+/etc/remotebtop/token
+
+# Logs
+*.log
+logs/
+
+# Build artifacts
+*.deb
+*.rpm
+*.tar.gz
+
+# Temporary files
+tmp/
+temp/

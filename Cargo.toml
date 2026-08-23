@@ -1,0 +1,61 @@
+[workspace]
+resolver = "2"
+members = ["agent"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+authors = ["RemoteBtop Contributors"]
+
+[workspace.dependencies]
+# Async runtime
+tokio = { version = "1.38", features = ["full"] }
+axum = { version = "0.7", features = ["ws", "json"] }
+tower = { version = "0.4", features = ["limit"] }
+tower-http = { version = "0.5", features = ["trace", "cors"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+toml = "0.8"
+
+# System information
+sysinfo = "0.30"
+
+# NVIDIA GPU
+nvml-wrapper = "0.7"
+
+# Docker
+bollard = { version = "0.18", features = ["pipe", "tokio-stream", "hyperlocal", "chrono"] }
+
+# Configuration
+config = "0.14"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt", "json"] }
+
+# Error handling
+thiserror = "1.0"
+anyhow = "1.0"
+
+# Utilities
+uuid = { version = "1.7", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+bytes = "1.5"
+futures = "0.3"
+subtle = "2.5"
+
+# Testing
+tokio-test = "0.4"
+axum-test = { version = "21", features = ["ws"] }
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
+[profile.dev]
+debug = true

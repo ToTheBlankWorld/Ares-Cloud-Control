@@ -1,0 +1,55 @@
+[Unit]
+Description=RemoteBtop Monitoring Agent
+Documentation=https://github.com/yourusername/remote-btop
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=remotebtop
+Group=remotebtop
+ExecStart=/usr/local/bin/remotebtop-agent /etc/remotebtop/config.toml
+Restart=on-failure
+RestartSec=5
+StartLimitIntervalSec=60
+StartLimitBurst=3
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=remotebtop-agent
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/etc/remotebtop
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+RestrictNamespaces=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+RemoveIPC=true
+PrivateDevices=true
+ProtectProc=invisible
+ProcSubset=pid
+
+# Capabilities - only what's needed for monitoring
+# CAP_DAC_READ_SEARCH: Required to read /proc, /sys filesystem entries for other users' processes
+# CAP_SYS_RESOURCE: Required to override resource limits for process metrics collection
+CapabilityBoundingSet=CAP_DAC_READ_SEARCH CAP_SYS_RESOURCE
+AmbientCapabilities=CAP_DAC_READ_SEARCH CAP_SYS_RESOURCE
+
+# Docker socket access: If Docker monitoring is enabled, the agent needs read access to
+# /var/run/docker.sock. DO NOT add the 'remotebtop' user to the 'docker' group - this grants
+# full root-equivalent Docker control. Instead, use one of:
+#   - ACL: setfacl -m u:remotebtop:r /var/run/docker.sock
+#   - Docker socket proxy (e.g., tecnativa/docker-socket-proxy)
+#   - Podman rootless containers
+#   - systemd socket activation with a dedicated proxy service
+
+[Install]
+WantedBy=multi-user.target

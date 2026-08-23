@@ -1,0 +1,47 @@
+[package]
+name = "remotebtop-agent"
+description = "Lightweight Linux server monitoring agent"
+repository = "https://github.com/yourusername/remote-btop"
+categories = ["system-tools", "monitoring", "network-programming"]
+keywords = ["monitoring", "system", "metrics", "server", "linux"]
+edition = "2021"
+
+[dependencies]
+# Workspace dependencies
+tokio = { workspace = true, features = ["full", "macros", "rt-multi-thread", "sync", "time", "fs", "net", "process", "signal"] }
+axum = { workspace = true }
+tower = { workspace = true }
+tower-http = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+toml = { workspace = true }
+sysinfo = { workspace = true }
+nvml-wrapper = { workspace = true, optional = true }
+bollard = { workspace = true, optional = true }
+config = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+bytes = { workspace = true }
+futures = { workspace = true }
+subtle = { workspace = true }
+
+# Additional dependencies
+axum-extra = { version = "0.9", features = ["cookie", "cookie-signed"] }
+http = "1.0"
+hyper = { version = "1.0", features = ["full"] }
+hyper-util = { version = "0.1", features = ["full"] }
+socket2 = "0.5"
+
+[features]
+default = ["gpu", "docker"]
+gpu = ["dep:nvml-wrapper"]
+docker = ["dep:bollard"]
+
+[dev-dependencies]
+tokio-test = { workspace = true }
+axum-test = { version = "21", features = ["ws"] }
+serial_test = "2.0"
