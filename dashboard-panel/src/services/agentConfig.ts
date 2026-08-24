@@ -10,6 +10,7 @@
  */
 
 const STORAGE_KEY = 'ares.agent.config'
+const SERVERS_STORAGE_KEY = 'ares.servers'
 
 export interface AgentCredentials {
   baseUrl: string | null
@@ -85,5 +86,57 @@ export function clearAgentConfig(): void {
     window.localStorage.removeItem(STORAGE_KEY)
   } catch {
     /* ignore */
+  }
+}
+
+// Server persistence functions
+export interface StoredServer {
+  id: string
+  name: string
+  agentUrl: string
+  token: string
+}
+
+function readServersStore(): StoredServer[] {
+  if (typeof window === 'undefined') return []
+  try {
+    const raw = window.localStorage.getItem(SERVERS_STORAGE_KEY)
+    return raw ? (JSON.parse(raw) as StoredServer[]) : []
+  } catch {
+    return []
+  }
+}
+
+function writeServersStore(servers: StoredServer[]): void {
+  if (typeof window === 'undefined') return
+  try {
+    window.localStorage.setItem(SERVERS_STORAGE_KEY, JSON.stringify(servers))
+  } catch {
+    /* storage unavailable */
+  }
+}
+
+export function getStoredServers(): StoredServer[] {
+  return readServersStore()
+}
+
+export function addStoredServer(server: StoredServer): void {
+  const servers = readServersStore()
+  // Avoid duplicates by ID
+  const filtered = servers.filter((s) => s.id !== server.id)
+  writeServersStore([...filtered, server])
+}
+
+export function removeStoredServer(id: string): void {
+  const servers = readServersStore()
+  writeServersStore(servers.filter((s) => s.id !== id))
+}
+
+export function updateStoredServer(id: string, updates: Partial<StoredServer>): void {
+  const servers = readServersStore()
+  const index = servers.findIndex((s) => s.id === id)
+  if (index >= 0) {
+    servers[index] = { ...servers[index], ...updates }
+    writeServersStore(servers)
   }
 }

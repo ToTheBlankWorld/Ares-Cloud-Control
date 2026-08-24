@@ -39,7 +39,6 @@ const VIEW_TABS = [
 
 export function ServersPage() {
   const { data, loading } = useServers()
-  const [extraServers, setExtraServers] = useState<Server[]>([])
   const [query, setQuery] = useState('')
   const [status, setStatus] = useState<StatusFilter>('all')
   // Table first: this is a fleet list, and a table is the denser, faster read.
@@ -48,7 +47,7 @@ export function ServersPage() {
   const [descending, setDescending] = useState(false)
   const [addOpen, setAddOpen] = useState(false)
 
-  const servers = useMemo(() => [...(data ?? []), ...extraServers], [data, extraServers])
+  const servers = useMemo(() => [...(data ?? [])], [data])
 
   const visible = useMemo(() => {
     const needle = query.trim().toLowerCase()
@@ -85,7 +84,10 @@ export function ServersPage() {
     [sortKey],
   )
 
-  const onAdded = useCallback((server: Server) => setExtraServers((current) => [...current, server]), [])
+  const onAdded = useCallback(() => {
+    // Server is already persisted by the data source; listServers will pick it up on next load
+    // The modal closes automatically, triggering a refresh via useServers
+  }, [])
   const closeAdd = useCallback(() => setAddOpen(false), [])
 
   return (

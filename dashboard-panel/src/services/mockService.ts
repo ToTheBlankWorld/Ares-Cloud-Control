@@ -6,6 +6,7 @@
  */
 
 import { buildSeries, buildSnapshot, buildServer, mockAlerts, mockServers, serverProfiles } from '@/data/mockData'
+import { getStoredServers, addStoredServer, removeStoredServer, type StoredServer } from '@/services/agentConfig'
 import type {
   Alert,
   AresDataSource,
@@ -22,8 +23,38 @@ const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve,
 /** Jittered latency so loading states are exercised the way they will be in production. */
 const latency = (min = 180, max = 420) => delay(min + Math.random() * (max - min))
 
+// Load persisted servers on initialization
 let servers: Server[] = [...mockServers]
 let alerts: Alert[] = [...mockAlerts]
+
+function loadPersistedServers(): void {
+  if (typeof window === 'undefined') return
+  try {
+    const stored = getStoredServers()
+    for (const s of stored) {
+      const template = serverProfiles[1]
+      const base = buildServer(template)
+      const server: Server = {
+        ...base,
+        id: s.id,
+        name: s.name,
+        hostname: s.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        agentUrl: s.agentUrl,
+        region: 'unassigned',
+        tags: ['persisted'],
+        status: 'online',
+      }
+      if (!servers.some((existing) => existing.id === server.id)) {
+        servers = [...servers, server]
+      }
+    }
+  } catch {
+    /* ignore */
+  }
+}
+
+// Initialize persisted servers
+loadPersistedServers()
 
 function slugify(value: string): string {
   return (
@@ -112,6 +143,16 @@ export const mockService: AresDataSource = {
       status: 'online',
     }
     servers = [...servers, server]
+
+    // Persist to localStorage
+    const storedServer: StoredServer = {
+      id: server.id,
+      name: server.name,
+      agentUrl: server.agentUrl,
+      token: input.token.trim(),
+    }
+    addStoredServer(storedServer)
+
     return { ...server }
   },
 
@@ -119,6 +160,9 @@ export const mockService: AresDataSource = {
     await latency(180, 320)
     servers = servers.filter((s) => s.id !== id)
     alerts = alerts.filter((a) => a.serverId !== id)
+
+    // Remove from localStorage
+    removeStoredServer(id)
   },
 
   async restartAgent(serverId: string): Promise<void> {
