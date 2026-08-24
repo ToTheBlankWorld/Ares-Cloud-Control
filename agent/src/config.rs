@@ -200,7 +200,12 @@ mod tests {
 
     #[test]
     fn test_config_defaults() {
-        let config = AppConfig::load(None).unwrap();
+        // Use an empty temp file to avoid loading /etc/remotebtop/config.toml
+        // which may contain deployment-specific overrides (e.g., localhost:5173 for dev)
+        let mut temp_file = tempfile::NamedTempFile::new().unwrap();
+        // Write minimal valid TOML to ensure the file exists but has no cors override
+        writeln!(temp_file, r#""#).unwrap();
+        let config = AppConfig::load(Some(temp_file.path().to_path_buf())).unwrap();
         assert_eq!(config.server.host, "127.0.0.1");
         assert_eq!(config.server.port, 9000);
         assert_eq!(config.monitoring.interval_ms, 1000);
