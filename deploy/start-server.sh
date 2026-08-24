@@ -131,19 +131,61 @@ start_cloudflare_tunnel() {
     log_pass "Cloudflare tunnel URL detected: $PUBLIC_URL"
 }
 
-# Verify public URL
+# Verify public URL with DNS readiness loop
 verify_public_url() {
-    log_info "Verifying public URL..."
+    log_info "Verifying public URL (with DNS readiness check)..."
 
-    local response
-    response=$(curl -fsS "$PUBLIC_URL/api/health") || {
-        log_fail "Public URL health check failed."
-        cat "/var/log/remotebtop-cloudflared.log"
-        exit 1
-    }
+    local timeout=60
+    local start_time
+    start_time=$(date +%s)
+    local dns_ok=false
+    local http_ok=false
+    local hostname
 
-    echo "Response: $response"
-    log_pass "Cloudflare Tunnel is reachable"
+    # Extract hostname from PUBLIC_URL for DNS checks
+    hostname=$(echo "$PUBLIC_URL" | sed -E 's|https?://([^/]+).*|\1|')
+
+    log_info "Waiting for DNS propagation of $hostname (timeout: ${timeout}s)..."
+
+    while [[ $(($(date +%s) - start_time)) -le $timeout ]]; do
+        # Step 1: Check DNS resolution
+        if ! $dns_ok; then
+            if getent hosts "$hostname" >/dev/null 2>&1 || nslookup "$hostname" >/dev/null 2>&1; then
+                log_pass "DNS resolved for $hostname"
+                dns_ok=true
+            else
+                echo -ne "\r[INFO] Waiting for DNS... $((timeout - $(date +%s) + start_time))s remaining"
+                sleep 2
+                continue
+            fi
+        fi
+
+        # Step 2: Once DNS resolves, test HTTP health endpoint
+        if $dns_ok && ! $http_ok; then
+            local response
+            # Use --max-time to prevent hanging, --connect-timeout for DNS/TCP connect
+            response=$(curl -fsS --max-time 10 --connect-timeout 5 "$PUBLIC_URL/api/health" 2>/dev/null) || {
+                echo -ne "\r[INFO] DNS OK, waiting for HTTP... $((timeout - $(date +%s) + start_time))s remaining"
+                sleep 2
+                continue
+            }
+            echo ""
+            echo "Response: $response"
+            log_pass "Cloudflare Tunnel is reachable"
+            return 0
+        fi
+    done
+
+    # Timeout reached
+    echo ""
+    log_fail "Timeout waiting for public URL readiness."
+    echo "Generated URL: $PUBLIC_URL"
+    echo "Hostname: $hostname"
+    echo "DNS resolved: $dns_ok"
+    echo "HTTP health: $http_ok"
+    echo "Cloudflared log (last 50 lines):"
+    tail -50 "/var/log/remotebtop-cloudflared.log" 2>/dev/null || cat "/var/log/remotebtop-cloudflared.log" 2>/dev/null || true
+    exit 1
 }
 
 # Test authenticated metrics
