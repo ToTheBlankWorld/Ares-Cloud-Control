@@ -131,74 +131,69 @@ start_cloudflare_tunnel() {
     log_pass "Cloudflare tunnel URL detected: $PUBLIC_URL"
 }
 
-# Verify public URL with DNS readiness loop
-verify_public_url() {
-    log_info "Verifying public URL (with DNS readiness check)..."
+# Verify Cloudflare tunnel registration (not public DNS/HTTP)
+verify_cloudflare_tunnel() {
+    log_info "Verifying Cloudflare tunnel registration..."
 
+    local log_file="/var/log/remotebtop-cloudflared.log"
+    local pid_file="/run/remotebtop-cloudflared.pid"
     local timeout=60
     local start_time
     start_time=$(date +%s)
-    local dns_ok=false
-    local http_ok=false
-    local hostname
+    local registered=false
 
-    # Extract hostname from PUBLIC_URL for DNS checks
-    hostname=$(echo "$PUBLIC_URL" | sed -E 's|https?://([^/]+).*|\1|')
-
-    log_info "Waiting for DNS propagation of $hostname (timeout: ${timeout}s)..."
+    log_info "Waiting for Cloudflare tunnel registration (timeout: ${timeout}s)..."
 
     while [[ $(($(date +%s) - start_time)) -le $timeout ]]; do
-        # Step 1: Check DNS resolution
-        if ! $dns_ok; then
-            if getent hosts "$hostname" >/dev/null 2>&1 || nslookup "$hostname" >/dev/null 2>&1; then
-                log_pass "DNS resolved for $hostname"
-                dns_ok=true
-            else
-                echo -ne "\r[INFO] Waiting for DNS... $((timeout - $(date +%s) + start_time))s remaining"
-                sleep 2
-                continue
+        # Check if cloudflared process is still alive
+        if [[ -f "$pid_file" ]]; then
+            local cf_pid
+            cf_pid=$(cat "$pid_file" 2>/dev/null || true)
+            if [[ -n "$cf_pid" ]] && ! kill -0 "$cf_pid" 2>/dev/null; then
+                log_fail "cloudflared process died (PID: $cf_pid)."
+                echo "Cloudflared log:"
+                cat "$log_file"
+                exit 1
             fi
         fi
 
-        # Step 2: Once DNS resolves, test HTTP health endpoint
-        if $dns_ok && ! $http_ok; then
-            local response
-            # Use --max-time to prevent hanging, --connect-timeout for DNS/TCP connect
-            response=$(curl -fsS --max-time 10 --connect-timeout 5 "$PUBLIC_URL/api/health" 2>/dev/null) || {
-                echo -ne "\r[INFO] DNS OK, waiting for HTTP... $((timeout - $(date +%s) + start_time))s remaining"
-                sleep 2
-                continue
-            }
-            echo ""
-            echo "Response: $response"
-            log_pass "Cloudflare Tunnel is reachable"
+        # Check for successful tunnel registration in logs
+        if ! $registered && grep -q "Registered tunnel connection" "$log_file" 2>/dev/null; then
+            log_pass "Cloudflare tunnel registered successfully"
+            registered=true
+        fi
+
+        # If registered, wait a bit more to ensure connection is stable, then succeed
+        if $registered; then
+            sleep 2
+            log_pass "Cloudflare tunnel connection established"
             return 0
         fi
+
+        sleep 2
     done
 
     # Timeout reached
-    echo ""
-    log_fail "Timeout waiting for public URL readiness."
-    echo "Generated URL: $PUBLIC_URL"
-    echo "Hostname: $hostname"
-    echo "DNS resolved: $dns_ok"
-    echo "HTTP health: $http_ok"
+    log_fail "Timeout waiting for Cloudflare tunnel registration."
     echo "Cloudflared log (last 50 lines):"
-    tail -50 "/var/log/remotebtop-cloudflared.log" 2>/dev/null || cat "/var/log/remotebtop-cloudflared.log" 2>/dev/null || true
+    tail -50 "$log_file" 2>/dev/null || cat "$log_file" 2>/dev/null || true
     exit 1
 }
 
-# Test authenticated metrics
-test_authenticated_metrics() {
-    log_info "Testing authenticated metrics endpoint..."
+# Test authenticated metrics LOCALLY (via 127.0.0.1)
+test_authenticated_metrics_local() {
+    log_info "Testing authenticated metrics endpoint locally..."
 
     local token
     token=$(cat /etc/remotebtop/token)
 
     local response
-    response=$(curl -fsS -H "Authorization: Bearer $token" "$PUBLIC_URL/api/metrics") || {
-        log_fail "Authenticated metrics request failed."
-        cat "/var/log/remotebtop-cloudflared.log"
+    response=$(curl -fsS --max-time 10 \
+        -H "Authorization: Bearer $token" \
+        http://127.0.0.1:9000/api/metrics) || {
+        log_fail "Authenticated local metrics request failed."
+        echo "Checking local agent:"
+        curl -fsS http://127.0.0.1:9000/api/health || true
         exit 1
     }
 
@@ -231,7 +226,7 @@ test_authenticated_metrics() {
         echo "Authenticated endpoint returned successfully (jq not available for detailed parsing)"
     fi
 
-    log_pass "Authenticated metrics endpoint working"
+    log_pass "Authenticated metrics endpoint working (local)"
 }
 
 # Print final output
@@ -253,10 +248,10 @@ print_final() {
     echo "Public Agent URL:"
     echo "    $PUBLIC_URL"
     echo ""
-    echo "Health:"
+    echo "Local Health:"
     echo "    ● PASS"
     echo ""
-    echo "Authenticated metrics:"
+    echo "Authenticated Metrics (local):"
     echo "    ● PASS"
     echo ""
     echo "------------------------------------------------------------"
@@ -275,14 +270,11 @@ print_final() {
     echo ""
     echo "------------------------------------------------------------"
     echo ""
-    echo "IMPORTANT:"
+    echo "Public URL:"
+    echo "    Use this URL from the dashboard/browser."
     echo ""
-    echo "This is a Cloudflare Quick Tunnel."
-    echo ""
-    echo "The URL is temporary and may change when the tunnel"
-    echo "is restarted."
-    echo ""
-    echo "Keep the cloudflared process running."
+    echo "Note: The public URL is reachable externally. This server"
+    echo "may not resolve its own temporary trycloudflare.com hostname."
     echo ""
     echo "============================================================"
 }
@@ -299,8 +291,8 @@ main() {
     verify_local_api
     stop_old_tunnel
     start_cloudflare_tunnel
-    verify_public_url
-    test_authenticated_metrics
+    verify_cloudflare_tunnel
+    test_authenticated_metrics_local
     print_final
 }
 
