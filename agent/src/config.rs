@@ -202,8 +202,8 @@ mod tests {
     fn test_config_defaults() {
         // Use an empty temp file to avoid loading /etc/remotebtop/config.toml
         // which may contain deployment-specific overrides (e.g., localhost:5173 for dev)
-        let temp_file = tempfile::NamedTempFile::new().unwrap();
-        // NamedTempFile creates an empty file by default; no write needed.
+        // The .toml suffix is required because config-rs detects format from extension.
+        let temp_file = tempfile::NamedTempFile::with_suffix(".toml").unwrap();
         let config = AppConfig::load(Some(temp_file.path().to_path_buf())).unwrap();
         assert_eq!(config.server.host, "127.0.0.1");
         assert_eq!(config.server.port, 9000);
